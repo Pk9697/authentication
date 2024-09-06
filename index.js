@@ -46,10 +46,12 @@ app.post('/register', async (req, res) => {
 			password,
 		})
 
+		const { password: userPassword, ...userWithoutPassword } = user._doc
+
 		return res.status(201).json({
 			success: true,
 			message: 'User registered successfully',
-			user,
+			user: userWithoutPassword,
 		})
 	} catch (err) {
 		console.error(err)
@@ -70,7 +72,7 @@ app.post('/login', async (req, res) => {
 			})
 		}
 
-		const existingUser = await User.findOne({ email })
+		const existingUser = await User.findOne({ email }).select('+password')
 		if (!existingUser) {
 			return res.status(401).json({
 				success: false,
@@ -78,7 +80,9 @@ app.post('/login', async (req, res) => {
 			})
 		}
 
-		if (existingUser.password !== password) {
+		const { password: userPassword, ...userWithoutPassword } = existingUser._doc
+
+		if (userPassword !== password) {
 			return res.status(401).json({
 				success: false,
 				message: 'Password wrong',
@@ -88,7 +92,7 @@ app.post('/login', async (req, res) => {
 		return res.status(200).json({
 			success: true,
 			message: 'LoggedIn successfully',
-			user: existingUser,
+			user: userWithoutPassword,
 		})
 	} catch (err) {
 		console.error(err)
