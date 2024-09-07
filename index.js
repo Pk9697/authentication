@@ -12,8 +12,9 @@ dotenv.config()
 const app = express()
 const PORT = process.env.PORT || 8000
 const DB_NAME = 'session-based-authentication'
+const MONGODB_URI = `${process.env.MONGODB_URI}/${DB_NAME}`
 const store = new mongoDbSession({
-	uri: process.env.MONGO_URI,
+	uri: MONGODB_URI,
 	collection: 'sessions',
 })
 /* GLOBAL MIDDLEWARES */
@@ -134,7 +135,7 @@ app.post('/login', async (req, res) => {
 	}
 })
 
-app.get('/dashboard',verifyIsAuth, (req, res) => {
+app.get('/dashboard', verifyIsAuth, (req, res) => {
 	console.log(req.session)
 
 	return res.status(200).json({
@@ -143,10 +144,26 @@ app.get('/dashboard',verifyIsAuth, (req, res) => {
 	})
 })
 
+app.get('/logout', verifyIsAuth, (req, res) => {
+	req.session.destroy((err) => {
+		if (err) {
+			console.error(err)
+			return res.status(500).json({
+				success: false,
+				message: 'Internal Server error',
+			})
+		}
+		return res.status(200).json({
+			success: true,
+			message: 'LoggedOut successfully',
+		})
+	})
+})
+
 mongoose
-	.connect(`${process.env.MONGODB_URI}/${DB_NAME}`)
+	.connect(MONGODB_URI)
 	.then((connectionInstance) => {
-		console.log('MongoDb connected :',connectionInstance.connections[0].name)
+		console.log('MongoDb connected :', connectionInstance.connections[0].name)
 		app.listen(PORT, (err) => {
 			if (err) {
 				console.error(err)
