@@ -21,6 +21,10 @@ const userSchema = new Schema(
 			required: true,
 			select: false,
 		},
+		isEmailVerified: {
+			type: Boolean,
+			default: false,
+		},
 	},
 	{
 		timestamps: true,
