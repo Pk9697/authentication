@@ -7,6 +7,7 @@ const mongoDbSession = require('connect-mongodb-session')(session)
 /* FILE IMPORTS */
 const User = require('./models/user.model.js')
 const verifyIsAuth = require('./middlewares/verifyIsAuth.js')
+const rateLimit = require('./middlewares/rateLimit.js')
 
 dotenv.config()
 const app = express()
@@ -135,8 +136,11 @@ app.post('/login', async (req, res) => {
 	}
 })
 
-app.get('/dashboard', verifyIsAuth, (req, res) => {
-	console.log(req.session)
+// Rate Limiting is generally applied to post requests only
+// https://expressjs.com/en/guide/routing.html#rate-limiting
+
+app.get('/dashboard', verifyIsAuth, rateLimit, (req, res) => {
+	// console.log(req.session)
 
 	return res.status(200).json({
 		success: true,
