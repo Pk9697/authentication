@@ -3,6 +3,7 @@ const express = require('express')
 const mongoose = require('mongoose')
 const session = require('express-session')
 const mongoDbSession = require('connect-mongodb-session')(session)
+const cron = require('node-cron')
 
 /* FILE IMPORTS */
 const User = require('./models/user.model.js')
@@ -18,6 +19,17 @@ const store = new mongoDbSession({
 	uri: MONGODB_URI,
 	collection: 'sessions',
 })
+const task = cron.schedule(
+	'*/2 * * * * *',
+	() => {
+		console.log('running a task every 2 second')
+	},
+	{
+		scheduled: false,
+		timezone: 'Asia/Kolkata',
+	}
+)
+
 /* GLOBAL MIDDLEWARES */
 //parsing url encoded form data into json object and inserts it in req.body
 app.use(express.urlencoded({ extended: true }))
@@ -170,14 +182,17 @@ mongoose
 		console.log('MongoDb connected :', connectionInstance.connections[0].name)
 		app.listen(PORT, (err) => {
 			if (err) {
+				task.stop()
 				console.error(err)
 				process.exit(1)
 			}
 			console.log(`Server is listening on port:${PORT}`)
+			task.start()
 		})
 	})
 	.catch((err) => {
 		if (err) {
+			task.stop()
 			console.error(err)
 			process.exit(1)
 		}
